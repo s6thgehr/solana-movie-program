@@ -1,5 +1,5 @@
 [package]
-name = "pda-local"
+name = "movie_reviewer"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,6 +10,8 @@ no-entrypoint = []
 solana-program = "1.10.29"
 borsh = "0.9.3"
 thiserror = "1.0.31"
+spl-token = { version="3.2.0", features = [ "no-entrypoint" ] }
+spl-associated-token-account = { version="=1.0.5", features = [ "no-entrypoint" ] }
 
 [lib]
 crate-type = ["cdylib", "lib"]
