@@ -342,43 +342,55 @@ pub fn add_comment(
 pub fn initialize_token_mint(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();
 
+    // The order of accounts is not arbitrary, the client will send them in this order
+    // Whoever sent in the transaction
     let initializer = next_account_info(account_info_iter)?;
+    // Token mint PDA - derived on the client
     let token_mint = next_account_info(account_info_iter)?;
+    // Token mint authorirty (this should be you)
     let mint_auth = next_account_info(account_info_iter)?;
+    // System program to create a new account
     let system_program = next_account_info(account_info_iter)?;
+    // Solana Token program address
     let token_program = next_account_info(account_info_iter)?;
+    // System account to calcuate the rent
     let sysvar_rent = next_account_info(account_info_iter)?;
 
+    // Derive the mint PDA again so we can validate it
+    // The seed is just "token_mint"
     let (mint_pda, mint_bump) = Pubkey::find_program_address(&[b"token_mint"], program_id);
-    let (mint_auth_pda, _mint_auth_pda) =
+    // Derive the mint authority so we can validate it
+    // The seed is just "token_auth"
+    let (mint_auth_pda, _mint_auth_bump) =
         Pubkey::find_program_address(&[b"token_auth"], program_id);
 
     msg!("Token mint: {:?}", mint_pda);
     msg!("Mint authority: {:?}", mint_auth_pda);
 
+    // Validate the important accounts passed in
     if mint_pda != *token_mint.key {
         msg!("Incorrect token mint account");
-        return Err(ReviewError::InvalidPDA.into());
+        return Err(ReviewError::IncorrectAccountError.into());
     }
 
     if *token_program.key != TOKEN_PROGRAM_ID {
         msg!("Incorrect token program");
-        return Err(ReviewError::InvalidPDA.into());
+        return Err(ReviewError::IncorrectAccountError.into());
     }
 
     if *mint_auth.key != mint_auth_pda {
         msg!("Incorrect mint auth account");
-        return Err(ReviewError::InvalidPDA.into());
+        return Err(ReviewError::IncorrectAccountError.into());
     }
 
     if *system_program.key != SYSTEM_PROGRAM_ID {
         msg!("Incorrect system program");
-        return Err(ReviewError::InvalidPDA.into());
+        return Err(ReviewError::IncorrectAccountError.into());
     }
 
     if *sysvar_rent.key != RENT_PROGRAM_ID {
         msg!("Incorrect rent program");
-        return Err(ReviewError::InvalidPDA.into());
+        return Err(ReviewError::IncorrectAccountError.into());
     }
 
     // Calculate the rent
